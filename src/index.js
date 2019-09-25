@@ -38,56 +38,18 @@ const MORSE_TABLE = {
 };
 
 function decode(expr) {
-    return new MorseInputStreamReader(expr).readAll();
-}
-
-class MorseInputStreamReader {
-    constructor(src) {
-        this.src = src;
-        this.ptr = 0;
-        this.malformedChar = "?";
+    let result="";
+    let codeTable=[];
+    for (let k of Object.getOwnPropertyNames(MORSE_TABLE)) {
+        codeTable[k.replace(/\./g, "10").replace(/-/g, "11").padStart(10, "0")]=MORSE_TABLE[k];
     }
-
-    hasNext() {
-        return this.ptr < this.src.length;
+    codeTable["**********"]=" ";
+    for (let i = 0; i < expr.length; i+=10) {
+        let encChar=expr.substr(i, 10);
+        let decChar=codeTable[encChar];
+        result+=decChar===undefined?"?":decChar;
     }
-
-    next() {
-        if (this.ptr+10 > this.src.length) {
-            return this.malformedChar;
-        }
-        let encChar = this.src.substr(this.ptr, 10);
-        this.ptr += 10;
-
-        if (encChar === "**********") {
-            return " ";
-        }
-        let morseSB = "";
-        for (let i = 0; i < 10; i += 2) {
-            let unit = encChar.substr(i, 2);
-            if (unit === "10") {
-                morseSB += ".";
-            }
-            if (unit === "11") {
-                morseSB += "-";
-            }
-            if (unit === "00") {
-                //nop
-            }
-        }
-
-        let char = MORSE_TABLE[morseSB];
-        return char===undefined?this.malformedChar:char;
-    }
-
-    readAll(){
-        let buf = "";
-        while (this.hasNext()){
-            buf+=this.next();
-        }
-        return buf;
-    }
-
+    return result;
 }
 
 module.exports = {
